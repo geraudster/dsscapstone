@@ -1,0 +1,78 @@
+---
+title: "Quiz1"
+output: html_document
+---
+
+Load dependencies:
+```{r, cache=TRUE}
+source('~/dsscapstone/R/loadData.R')
+
+loadDataFile()
+
+```
+
+## Question 1 and 2
+
+Load the data:
+
+```{r, cache=TRUE}
+
+en_US.blogs <- loadData('en_US', 'blogs')
+en_US.news <- loadData('en_US', 'news')
+en_US.twitter <- loadData('en_US', 'twitter')
+```
+
+
+```{r, cache=TRUE}
+lengths <- sapply(list(en_US.blogs, en_US.news, en_US.twitter), length)
+sizes <- format(sapply(list(en_US.blogs, en_US.news, en_US.twitter), function(x) {
+  format(object.size(x), units = 'auto')}))
+names(lengths) <- c('en_US.blogs', 'en_US.news', 'en_US.twitter')
+rbind(lengths, sizes)
+```
+
+## Question 3
+
+Compute document length:
+```{r, cache=TRUE}
+en_US.blogs.length <- sapply(en_US.blogs, nchar)
+en_US.news.length <- sapply(en_US.news, nchar)
+en_US.twitter.length <- sapply(en_US.twitter, nchar)
+```
+
+Print summaries:
+```{r, cache=TRUE}
+sapply(list(en_US.blogs = en_US.blogs.length,
+           en_US.news = en_US.news.length,
+           en_US.twitter = en_US.twitter.length),
+       summary)
+```
+
+## Question 4
+
+Computes the ratio between twits with 'love' versus 'hate':
+```{r}
+love.twits <- grep('love', en_US.twitter)
+hate.twits <- grep('hate', en_US.twitter)
+
+length(love.twits) / length(hate.twits)
+```
+
+## Question 5
+
+Find twit with 'biostats' in it:
+
+```{r}
+grep('biostats', en_US.twitter, value = TRUE)
+```
+
+## Question 6
+
+Find twit with exact sentence:
+```{r}
+grep('A computer once beat me at chess, but it was no match for me at kickboxing',
+     en_US.twitter,
+     value = TRUE,
+     fixed = TRUE)
+```
+

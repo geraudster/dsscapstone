@@ -3,7 +3,7 @@
 
 source('loadData.R')
 
-#loadDataFile()
+loadDataFile()
 
 en_US.blogs <- loadData('en_US', 'blogs', 5000)
 en_US.news <- loadData('en_US', 'news', 5000)
@@ -19,47 +19,42 @@ rbind(lengths, sizes)
 
 library(tm)
 library(SnowballC)
-t <- iconv(en_US.blogs, from = 'UTF-8', to="utf-8-mac")
 myCorpus <- Corpus(VectorSource(en_US.blogs), readerControl = list(language = 'en'))
 myCorpus.2 <- tm_map(myCorpus, stripWhitespace)
 myCorpus.2 <- tm_map(myCorpus.2, removePunctuation)
 myCorpus.2 <- tm_map(myCorpus.2, content_transformer(tolower))
 myCorpus.2 <- tm_map(myCorpus.2, removeWords, stopwords("english"))
-myCorpus.2 <- tm_map(myCorpus.2, stripWhitespace)
 myCorpus.2 <- tm_map(myCorpus.2, stemDocument, language = meta(myCorpus.2, "language"))
+myCorpus.2 <- tm_map(myCorpus.2, stripWhitespace)
+myCorpus.2 <- tm_map(myCorpus.2, content_transformer(stringr::str_trim))
 myCorpus.3 <- tm_filter(myCorpus.2, function (x) {
   length(unlist(strsplit(stringr::str_trim(x$content), '[[:blank:]]+'))) > 1
   })
 
 library(devtools)
 install_github('wrathematics/ngram')
+
+nmax <- 3
 bigramTokenizer <- function(x) {
   x <- as.character(x)
   
-  # Find words
-  one.list <- c()
-  tryCatch({
-    one.gram <- ngram::ngram(x, n = 1)
-    one.list <- ngram::get.ngrams(one.gram)
-  }, 
-  error = function(cond) { warning(cond) })
+  ngrams <- unlist(sapply(1:nmax, function (n) {
+    tryCatch({
+      grams <- ngram::ngram(x, n = n)
+      ngram::get.ngrams(grams)
+    }, 
+    error = function(cond) { 
+      #message(cond)
+      ''})    
+  }))
   
-  # Find 2-grams
-  two.list <- c()
-  tryCatch({
-    two.gram <- ngram::ngram(x, n = 2)
-    two.list <- ngram::get.ngrams(two.gram)
-  },
-  error = function(cond) { warning(cond) })
-  
-  res <- unlist(c(one.list, two.list))
-  res[res != '']
+  ngrams[ngrams != '']
 }
 
-dtm <- DocumentTermMatrix(myCorpus.3[1:10])
+dtmTest <- lapply(myCorpus.3, bigramTokenizer)
+dtm <- DocumentTermMatrix(myCorpus.3[35:36], control = list(tokenize = bigramTokenizer))
 
 dtm <- DocumentTermMatrix(myCorpus.3, control = list(tokenize = bigramTokenizer))
-dtmTest <- lapply(myCorpus.3, bigramTokenizer)
 
 en_US.blogs.df <- data.frame(type = 'blogs',
                              document = en_US.blogs,
